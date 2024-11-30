@@ -1,3 +1,4 @@
 input.txt
 que.txt
 *.pls-tmp*
+.DS_STORE
