@@ -2,6 +2,3 @@ input.txt
 que.txt
 *.pls-tmp*
 .DS_STORE
-*2024
-
-# Ignoring 2024 dir until 25DEC
