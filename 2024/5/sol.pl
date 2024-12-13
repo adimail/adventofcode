@@ -3,55 +3,49 @@
 use strict;
 use warnings;
 
-open my $file, '<', 'input.txt' or die "Could not open file: $!";
+open( my $fin, '<', './input.txt' ) or die "Could not open file: $!";
 
-my %order;
-my @updates;
-my $sum_of_middles = 0;
+my $content = do { local $/; <$fin> };
 
-while ( my $line = <$file> ) {
-	chomp($line);
-	if ( $line =~ /^(\d+)\|(\d+)$/ ) {
+close($fin);
 
-		my ( $a, $b ) = ( $1, $2 );
-		push @{ $order{$b} }, $a;
-	}
-	elsif ( $line =~ /^\d+(,\d+)*$/ ) {
+my $ans = 0;
 
-		my @nums = split( ',', $line );
-		push @updates, \@nums;
-	}
+my ( $raw_rules, $raw_updates ) = split( /\n\n/, $content );
+
+my @rules;
+for my $line ( split /\n/, $raw_rules ) {
+	my ( $a, $b ) = split /\|/, $line;
+	push @rules, [ $a + 0, $b + 0 ];
 }
 
-close $file;
+my @updates;
+for my $line ( split /\n/, $raw_updates ) {
+	push @updates, [ map { $_ + 0 } split /,/, $line ];
+}
 
-sub is_valid_update {
-	my ( $pages, $order_ref ) = @_;
-	my %seen;
+sub valid {
+	my ($update) = @_;
+	my %idx;
+	for my $i ( 0 .. $#$update ) {
+		$idx{ $update->[$i] } = $i;
+	}
 
-	print join( " ", @$pages );
-	print "\n";
-
-	foreach my $page (@$pages) {
-		$seen{$page} = 1;
-
-		if ( exists $order_ref->{$page} ) {
-
-			#foreach my $required_before ( @{ $order_ref->{$page} } ) {
-			#
-			#	return 0 unless $seen{$required_before};
-			#}
+	for my $rule (@rules) {
+		my ( $a, $b ) = @$rule;
+		if ( exists $idx{$a} && exists $idx{$b} && !( $idx{$a} < $idx{$b} ) ) {
+			return 0;
 		}
 	}
-	return 1;
+
+	return $update->[ int( @$update / 2 ) ];
 }
 
-foreach my $update (@updates) {
-	if ( is_valid_update( $update, \%order ) ) {
-
-		my $middle_index = int( @$update / 2 );
-		$sum_of_middles += $update->[$middle_index];
+for my $update (@updates) {
+	my $mid = valid($update);
+	if ($mid) {
+		$ans += $mid;
 	}
 }
 
-print "Sum of middle page numbers: $sum_of_middles\n";
+print "$ans\n";
